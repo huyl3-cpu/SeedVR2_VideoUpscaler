@@ -123,17 +123,19 @@ class SeedVR2VideoUpscaler(io.ComfyNode):
                     )
                 ),
                 io.Int.Input("batch_size",
-                    default=5,
+                    default=81,
                     min=1,
                     max=16384,
                     step=4,
                     tooltip=(
-                        "Number of frames processed together per batch (default: 5).\n"
-                        "Must follow pattern 4n+1: 1, 5, 9, 13, 17, 21, ...\n"
+                        "Number of frames processed together per batch (default: 81).\n"
+                        "Must follow pattern 4n+1: 1, 5, 9, 13, 17, 21, ..., 81, 129...\n"
                         "\n"
-                        "• Higher values: Better temporal consistency and faster processing\n"
+                        "• Higher values: Better temporal consistency, faster processing, more VRAM\n"
                         "• Lower values: Reduced VRAM usage\n"
                         "\n"
+                        "Recommended for A100 80GB: 81-129 frames\n"
+                        "Recommended for RTX 4090 24GB: 17-33 frames\n"
                         "Ideally match to shot length for best quality."
                     )
                 ),
@@ -212,13 +214,13 @@ class SeedVR2VideoUpscaler(io.ComfyNode):
                 ),
                 io.Combo.Input("offload_device",
                     options=get_device_list(include_none=True, include_cpu=True),
-                    default="cpu",
+                    default="none",
                     optional=True,
                     tooltip=(
-                        "Device for storing intermediate tensors between processing phases (default: cpu).\n"
-                        "• 'none': Keep all tensors on inference device (fastest but highest VRAM usage)\n"
-                        "• 'cpu': Offload to system RAM (recommended for long videos, slower transfers)\n"
-                        "• 'cuda:X': Offload to another GPU (good balance if available, faster than CPU)"
+                        "Device for storing intermediate tensors between processing phases (default: none).\n"
+                        "• 'none': Keep all tensors on inference device (fastest, uses most VRAM - recommended for A100)\n"
+                        "• 'cpu': Offload to system RAM (slower transfers, saves VRAM)\n"
+                        "• 'cuda:X': Offload to another GPU (good balance if available)"
                     )
                 ),
                 io.Boolean.Input("enable_debug",
@@ -327,24 +329,32 @@ class SeedVR2VideoUpscaler(io.ComfyNode):
             progress_value = int(overall_progress * 100)
             pbar.update_absolute(progress_value, 100)
         
-        # Define cleanup as local function
+        # Define cleanup as local function - ALWAYS force full cleanup
         def cleanup(dit_cache: bool = False, vae_cache: bool = False) -> None:
-            """Cleanup resources after upscaling"""
+            """Cleanup resources after upscaling - ALWAYS clears everything (CPU/RAM/GPU)"""
             nonlocal runner, ctx
             
-            # Use complete_cleanup for all cleanup operations
+            # Force full cleanup - ignore cache parameters, always release everything
             if runner:
                 complete_cleanup(runner=runner, debug=debug, 
-                               dit_cache=dit_cache, vae_cache=vae_cache)
-                
-                # Delete runner only if neither model is cached
-                if not (dit_cache or vae_cache):
-                    runner = None
+                               dit_cache=False, vae_cache=False)
+                runner = None
             
             # Clean up context text embeddings if they exist
             if ctx:
                 cleanup_text_embeddings(ctx, debug)
                 ctx = None
+            
+            # Additional aggressive cleanup to ensure nothing remains
+            import gc
+            gc.collect()
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                torch.cuda.ipc_collect()
+                torch.cuda.synchronize()
+                # Clear cuBLAS workspaces
+                if hasattr(torch._C, '_cuda_clearCublasWorkspaces'):
+                    torch._C._cuda_clearCublasWorkspaces()
         
         # Extract configuration from dict inputs
         dit_model = dit["model"]
