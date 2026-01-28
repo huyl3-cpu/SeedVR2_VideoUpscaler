@@ -13,8 +13,8 @@ class SeedVR2TorchCompileSettings(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:
         return io.Schema(
-            node_id="SeedVR2TorchCompileSettings",
-            display_name="SeedVR2 Torch Compile Settings",
+            node_id="SeedVR2TorchCompileSettings_A100",
+            display_name="SeedVR2 Torch Compile Settings [A100]",
             category="SEEDVR2",
             description=(
                 "Configure SeedVR2 torch.compile optimization for 20-40% DiT speedup and 15-25% VAE speedup. "

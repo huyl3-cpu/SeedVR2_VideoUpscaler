@@ -31,8 +31,8 @@ class SeedVR2LoadVAEModel(io.ComfyNode):
         vae_models = get_available_vae_models()
         
         return io.Schema(
-            node_id="SeedVR2LoadVAEModel",
-            display_name="SeedVR2 (Down)Load VAE Model",
+            node_id="SeedVR2LoadVAEModel_A100",
+            display_name="SeedVR2 (Down)Load VAE Model [A100]",
             category="SEEDVR2",
             description=(
                 "Load and configure SeedVR2 VAE (Variational Autoencoder) for encoding/decoding video frames to/from latent space. "

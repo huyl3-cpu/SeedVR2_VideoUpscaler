@@ -66,8 +66,8 @@ class SeedVR2VideoUpscaler(io.ComfyNode):
     @classmethod
     def define_schema(cls) -> io.Schema:        
         return io.Schema(
-            node_id="SeedVR2VideoUpscaler",
-            display_name=f"SeedVR2 Video Upscaler (v{__version__})",
+            node_id="SeedVR2VideoUpscaler_A100",
+            display_name=f"SeedVR2 Video Upscaler [A100] (v{__version__})",
             category="SEEDVR2",
             description=(
                 "SeedVR2 main upscaling node: processes video frames using DiT and VAE models with diffusion-based enhancement. "

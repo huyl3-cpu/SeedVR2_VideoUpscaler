@@ -30,8 +30,8 @@ class SeedVR2LoadDiTModel(io.ComfyNode):
         dit_models = get_available_dit_models()
         
         return io.Schema(
-            node_id="SeedVR2LoadDiTModel",
-            display_name="SeedVR2 (Down)Load DiT Model",
+            node_id="SeedVR2LoadDiTModel_A100",
+            display_name="SeedVR2 (Down)Load DiT Model [A100]",
             category="SEEDVR2",
             description=(
                 "Load and configure SeedVR2 DiT (Diffusion Transformer) model for video upscaling. "
