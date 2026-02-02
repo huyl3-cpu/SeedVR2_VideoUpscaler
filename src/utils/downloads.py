@@ -146,7 +146,7 @@ def download_with_resume(url: str, filepath: str, debug=None) -> bool:
             
             pbar = tqdm(total=total_size, initial=existing_size, unit='B', 
                        unit_scale=True, unit_divisor=1024, 
-                       desc=os.path.basename(filepath))
+                       desc=os.path.basename(filepath), disable=True)
             
             with open(temp_file, 'ab' if existing_size else 'wb') as f:
                 while chunk := response.read(DOWNLOAD_CHUNK_SIZE):
